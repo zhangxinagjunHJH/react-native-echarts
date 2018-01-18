@@ -1,13 +1,33 @@
-import React, { Component } from 'react';
-import { WebView, View } from 'react-native';
-import { Container, Echarts } from './components'
+import React, { Component } from 'react'
+import { WebView, View, StyleSheet,Platform } from 'react-native'
+import renderChart from './renderChart'
+import echarts from './echarts.min'
 
 export default class App extends Component {
-  render() {
-    return (
-      <Container width={this.props.width}>
-        <Echarts {...this.props} />
-      </Container>
-    );
-  }
+    componentWillReceiveProps (nextProps) {
+        if (nextProps.option !== this.props.option) {
+            this.refs.chart.reload()
+        }
+    }
+
+    render () {
+        const source = (Platform.OS == 'ios') ? require('./tpl.html') : {'uri': 'file:///android_asset/tpl.html'}
+        return (
+            <View style={{flex: 1, height: this.props.height || 400,}}>
+                <WebView
+                    ref="chart"
+                    scrollEnabled={false}
+                    injectedJavaScript={renderChart(this.props)}
+                    style={{
+                        height: this.props.height || 400,
+                        backgroundColor: this.props.backgroundColor || '#fff'
+                    }}
+                    scalesPageToFit={false}
+                    //source={require('./tpl.html')}
+                    source={source}
+                    onMessage={event => this.props.onPress ? this.props.onPress(JSON.parse(event.nativeEvent.data)) : null}
+                />
+            </View>
+        )
+    }
 }
